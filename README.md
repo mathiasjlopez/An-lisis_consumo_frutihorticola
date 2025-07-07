@@ -43,7 +43,9 @@ Estudiar si el cumplimiento del consumo mínimo recomendado por la OMS (400g dia
 
 ## Archivos
 
-- `informe_tesis.html`: Informe completo del análisis
+
+- [`informe_tesis.html`](./informe/Resumen_tesis.html): Informe interactivo en HTML (no visible en GitHub, requiere descarga)
+- [`informe_tesis.pdf`](./informe/Resumene_tesis.pdf): Informe completo en PDF listo para lectura
 - `procesamiento_datos.Rmd`: Limpieza, recodificación y armado de las bases (en preparación)
 
 ---
