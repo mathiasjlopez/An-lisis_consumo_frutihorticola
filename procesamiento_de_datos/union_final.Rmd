@@ -1,0 +1,90 @@
+---
+title: 'Unificación de bases procesadas: ENFR + CNA + CN'
+author: "López Mathias Joel."
+output:
+  pdf_document:
+    toc: true
+    toc_depth: '3'
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    collapsed: true
+    smooth_scroll: true
+    theme: journal
+    highlight: kate
+    df_print: paged
+    code_folding: show
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#  Introducción
+
+Este archivo tiene como objetivo unificar las bases previamente procesadas de:
+
+- Encuesta Nacional de Factores de Riesgo (ENFR, 2009, 2013, 2018)
+
+- Censo Nacional Agropecuario (CNA, 2008 y 2018)
+
+- Censo Nacional 2010 (Necesidades Básicas Insatisfechas por provincia)
+
+La unificación se realiza por provincia y año de edición, con el objetivo de generar una base completa para modelar los determinantes del consumo de frutas y verduras.
+
+# Librerías
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(janitor)
+
+```
+
+# Carga de datos procesados
+
+```{r message=FALSE, warning=FALSE}
+ENFR_limpia <- read_csv("C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/3. Datos procesados/ENFR_limpia.csv")
+CNA_CN_limpia <- read_csv("C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/3. Datos procesados/CNA_CN_limpia.csv")
+
+```
+
+#  Unión de bases
+
+Realizamos un left_join() entre ENFR y CNA/CN utilizando las variables provincia y ano_edicion como claves.
+
+```{r message=FALSE, warning=FALSE}
+ENFR_t_NBI_CNA <- ENFR_limpia %>%
+  left_join(CNA_CN_limpia, by = c("provincia", "ano_edicion"))
+
+```
+
+# Validación de unión
+
+Comprobamos que no se generaron NAs inesperados y que la unión fue exitosa:
+
+```{r message=FALSE, warning=FALSE, echo = TRUE, results = "hide"}
+summary(ENFR_t_NBI_CNA)
+colSums(is.na(ENFR_t_NBI_CNA))
+ENFR_t_NBI_CNA %>%
+  group_by(ano_edicion) %>%
+  summarise(n = n())
+
+```
+
+# Exportación de base final
+
+Guardamos la base unificada en formato .csv y .rds, lista para análisis estadístico y visualizaciones.
+
+```{r message=FALSE, warning=FALSE}
+write_csv(ENFR_t_NBI_CNA, "C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/3. Datos procesados/base_final_para_modelo.csv")
+saveRDS(ENFR_t_NBI_CNA, "C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/3. Datos procesados/base_final_para_modelo.rds")
+
+```
+
+# Comentario final
+
+Esta base unificada contiene variables individuales (edad, género, quintil, consumo), estructurales del hogar (índice NBI dicotómico) y territoriales (superficie frutihortícola y % de hogares con NBI por provincia), organizada por año de encuesta y lista para modelización.
+
+

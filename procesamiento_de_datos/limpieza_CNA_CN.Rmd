@@ -1,0 +1,252 @@
+---
+title: "Limpieza y consolidación de bases CNA y CN"
+author: "López Mathias Joel."
+output:
+  pdf_document:
+    toc: true
+    toc_depth: '3'
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    collapsed: true
+    smooth_scroll: true
+    theme: journal
+    highlight: kate
+    df_print: paged
+    code_folding: show
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+#  Introducción
+
+Este documento tiene como objetivo consolidar los datos de explotaciones agropecuarias (EAP) de hortalizas y frutales por provincia a partir de los censos agropecuarios de 2008 y 2018 (CNA), y los datos de Necesidades Básicas Insatisfechas (NBI) del Censo Nacional 2010. A lo largo del procesamiento se realizaron:
+
+- Carga masiva de archivos Excel y CSV
+
+- Selección de hojas y filas específicas
+
+- Limpieza y transformación de variables
+
+- Unificación en un único data.frame
+
+- Creación de variables nuevas a partir de los datos crudos
+
+# Carga de librerías
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(janitor)
+library(readxl)
+library(dplyr)
+library(purrr)
+library(stringr)
+
+```
+
+# 1. Carga y limpieza del Censo Nacional (CN) 2010 – NBI
+
+```{r message=FALSE, warning=FALSE}
+
+NBI_Prov <- read_excel("C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/1. Datos brutos/nbi2010.xls", col_names = TRUE, skip = 2)
+
+# Seleccionamos columnas y eliminamos filas vacías
+NBI_Prov <- NBI_Prov %>%
+  select(Provincia, ...4, ...7) %>%
+  na.omit()
+
+```
+
+```{r message=FALSE, warning=FALSE}
+cn_nbi <- NBI_Prov %>%
+  select(Provincia, ...4, ...7) %>%
+  rename(
+    porcentaje_hogares_nbi = ...4,
+    porcentaje_población_nbi = ...7
+  ) %>%
+  filter(!Provincia %in% c("Total del país", "24 partidos del Gran Buenos Aires", "Interior de la provincia de Buenos Aires")) %>%
+  clean_names()
+
+# Replicamos la info para los 3 años de ENFR
+cn_nbi <- tidyr::crossing(cn_nbi, ano_edicion = c(2009, 2013, 2018)) %>%
+  mutate(ano_edicion = as.character(ano_edicion)) %>%
+  arrange(ano_edicion)
+
+# Renombramos provincias para que coincidan con otras bases
+cn_nbi <- cn_nbi %>%
+  mutate(
+    provincia = ifelse(provincia == "Tierra del Fuego, Antártida e Islas del Atlántico Sur", "Tierra del Fuego", provincia),
+    provincia = ifelse(provincia == "Ciudad Autónoma de Buenos Aires", "CABA", provincia)
+  )
+
+```
+
+# 2. Censo Nacional Agropecuario 2009 (CNA)
+
+Los datos del CNA 2009 están estructurados por más de un archivo y cada uno contiene los datos de  cada provincia en una hoja específica.
+En primera instancia se exploró el archivo perteneciente a la provincia de Buenos Aires para ver cómo estaba estructurado el dataset, y luego se procedió a automatizar el proceso.
+
+Automatización para todas las provincias
+
+```{r message=FALSE, warning=FALSE}
+# 2.1. Listar los archivos en la carpeta
+
+## Se listan todos los archivos .xls en la carpeta indicada. El orden coincide con el orden de las provincias listado posteriormente.
+
+archivos <- list.files("C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/1. Datos brutos/CNA08/", pattern = "\\.xls$", full.names = TRUE)
+
+## Función para buscar la hoja que contiene los datos a usar ("cuadro 3.2", sin importar mayúsculas)
+
+buscar_hoja <- function(archivo) {
+  sheets <- excel_sheets(archivo)
+  match <- sheets[which(str_detect(tolower(sheets), "cuadro 3\\.2"))]
+  if (length(match) == 0) return(NA) else return(match[1])
+}
+
+## 2.2. crear tabla con rutas y provincias
+### Creamos un data.frame llamado metadata que contiene:
+### la ruta a cada archivo,
+### el nombre de la hoja donde se encuentran los datos,
+### el nombre real de la provincia.
+
+tabla_rutas <- tibble(
+  archivo = archivos,
+  hoja = map_chr(archivos, buscar_hoja),   
+  provincia = c(
+    "Buenos Aires", "Catamarca", "Chaco","Chubut","Cordoba","Corrientes","Entre Rios","Formosa","Jujuy","La Pampa","La Rioja","Mendoza",
+    "Misiones","Neuquen","Rio Negro","Salta","San Juan","San Luis","Santa Cruz","Santa Fe","Santiago del Estero","Tierra del Fuego","Tucuman"))
+
+
+## 2.3. Función para procesar cada archivo
+
+### La siguiente función se encarga de:
+### leer el archivo Excel y la hoja correspondiente,
+### extraer la fila 4 (con totales),
+### seleccionar las columnas "Hortalizas" y "Frutales",
+### redondear y agregar el nombre de la provincia.
+
+procesar_archivo <- function(archivo, hoja, provincia) {
+  read_excel(archivo, sheet = hoja, skip = 3) %>%
+    slice(4) %>%
+    select(Hortalizas, Frutales) %>%
+    rename(
+      grupo_hortalizas_ha = Hortalizas,
+      grupo_frutales_ha = Frutales
+    ) %>%
+    mutate(
+      across(c(grupo_hortalizas_ha, grupo_frutales_ha), ~ round(as.numeric(.x), 2)),
+      provincia = provincia
+    )
+}
+
+## 2.4. Mapear sobre todos los archivos
+
+### Aplicamos la función a todos los archivos utilizando pmap_dfr(), lo que nos permite recorrer fila por fila del metadata y unir automáticamente los resultados en un solo data.frame.
+
+
+cna_09 <- pmap_dfr(tabla_rutas, procesar_archivo) %>%
+  mutate(ano_edicion = "2009")
+```
+
+# 3. Censo Nacional Agropecuario 2018 (CNA)
+
+```{r message=FALSE, warning=FALSE}
+data <- read.csv("C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/1. Datos brutos/cna2018.csv", header = TRUE, skip = 3, sep = ";", dec = ".")
+
+cna_18 <- data %>%
+  filter(PERIODO.DE.OCUPACION == "Total", PROVINCIA != "País") %>%
+  select(PROVINCIA, GRUPO.DE.CULTIVOS.ORTALIZAS, GRUPO.DE.CULTIVOS.FRUTALES) %>%
+  rename(
+    provincia = PROVINCIA,
+    grupo_hortalizas_ha = GRUPO.DE.CULTIVOS.ORTALIZAS,
+    grupo_frutales_ha = GRUPO.DE.CULTIVOS.FRUTALES
+  ) %>%
+  mutate(ano_edicion = "2018") %>%
+  clean_names()
+
+### Nos quedamos solamente con fila "total" del periodo, ya que es la suma de todos los periodos y eliminamos de la variable "Provincia" la fila "Pais" (es la suma de todas las provincias)
+
+
+# Conversión de coma decimal a punto
+convertor <- function(x) {
+  x <- gsub("\\.", "", x)
+  x <- gsub(",", ".", x)
+  as.numeric(x)
+}
+
+cna_18 <- cna_18 %>%
+  mutate(
+    grupo_hortalizas_ha = convertor(grupo_hortalizas_ha),
+    grupo_frutales_ha = convertor(grupo_frutales_ha)
+  )
+```
+
+# 4. Unión de CNA + CN + población por provincia
+
+```{r message=FALSE, warning=FALSE}
+cna_09_18 <- bind_rows(cna_09, cna_18)
+
+CNA_CN_limpia <- cn_nbi %>%
+  left_join(cna_09_18, by = c("ano_edicion", "provincia"))
+```
+
+Agregamos población por provincia: 
+
+```{r message=FALSE, warning=FALSE}
+poblacion_prov_09 <- data.frame(
+  provincia = c("Buenos Aires", "CABA", "Tierra del Fuego", "Misiones", "Cordoba", 
+                "Catamarca", "Formosa", "Rio Negro", "Jujuy", "Tucuman", "San Juan", "Corrientes", 
+                "Salta", "Chaco", "San Luis", "Neuquen", "La Rioja", "Mendoza", "Chubut", 
+                "Santa Fe", "Santiago del Estero", "Santa Cruz", "Entre Rios", "La Pampa"),
+  num_habitantes = c(14917940, 3034161, 122531, 1061590, 3311280, 380612, 532238, 594189, 670766, 1457357, 685883, 
+                1002416, 1202753, 1042881, 428025, 538952, 334235, 1711416, 455607, 3220818, 856739, 221871, 1242547, 329576 ),
+  ano_edicion = "2009"
+  )
+
+# str(poblacion_prov_09)
+
+
+poblacion_prov_18 <- data.frame(
+  provincia = c("Buenos Aires", "CABA", "Tierra del Fuego", "Misiones", "Cordoba", 
+                "Catamarca", "Formosa", "Rio Negro", "Jujuy", "Tucuman", "San Juan", "Corrientes", 
+                "Salta", "Chaco", "San Luis", "Neuquen", "La Rioja", "Mendoza", "Chubut", 
+                "Santa Fe", "Santiago del Estero", "Santa Cruz", "Entre Rios", "La Pampa"),
+  num_habitantes = c(16841135, 3059122, 156509, 1204182, 3606540, 400678, 584614, 708799, 736542, 1613476, 747488, 1080655, 1351878, 1155723, 
+                     482796, 628897, 372879, 1907045, 577466, 3425656, 938109, 329499, 329499, 346191 ),
+  ano_edicion = "2018"
+)
+
+# str(poblacion_prov_18)
+
+poblacion_prov_total <- bind_rows(poblacion_prov_09, poblacion_prov_18)
+
+CNA_CN_limpia <- CNA_CN_limpia %>%
+  left_join(poblacion_prov_total, by = c("ano_edicion", "provincia"))
+```
+
+# 5. Creación de variables derivadas
+
+```{r message=FALSE, warning=FALSE}
+CNA_CN_limpia <- CNA_CN_limpia %>%
+  mutate(
+    hort_x_habitantes = grupo_hortalizas_ha / num_habitantes,
+    frut_x_habitantes = grupo_frutales_ha / num_habitantes,
+    hort_x_10mil_habitantes = hort_x_habitantes * 10000,
+    frut_x_10mil_habitantes = frut_x_habitantes * 10000
+  ) %>%
+  select(ano_edicion, provincia, grupo_hortalizas_ha, grupo_frutales_ha,
+         hort_x_habitantes, frut_x_habitantes,
+         hort_x_10mil_habitantes, frut_x_10mil_habitantes,
+         porcentaje_hogares_nbi, num_habitantes)
+```
+
+# Exportar base final
+
+```{r message=FALSE, warning=FALSE}
+write.csv(CNA_CN_limpia, "C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/2. Procesamiento/CNA_CN_limpia.csv", row.names = FALSE)
+saveRDS(CNA_CN_limpia, "C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/2. Procesamiento/CNA_CN_limpia.rds")
+```
+

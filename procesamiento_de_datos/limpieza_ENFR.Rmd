@@ -1,0 +1,279 @@
+---
+title: "Limpieza y recodificación de las bases ENFR (2009, 2013, 2018)"
+author: "López Mathias Joel."
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introducción
+
+Este archivo tiene como objetivo realizar la carga, selección, recodificación y unificación de las bases de datos de la Encuesta Nacional de Factores de Riesgo (ENFR) correspondientes a los años 2009, 2013 y 2018. Se construyen variables relevantes para el análisis posterior, como nivel de instrucción, quintil de ingresos, cumplimiento de recomendaciones de consumo de frutas y verduras y un índice dicotómico de NBI a nivel de hogar.
+
+# Librerías
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(dplyr)
+library(purrr)
+library(janitor)
+```
+
+# Carga y limpieza de bases ENFR
+
+## ENFR 2009
+
+```{r message=FALSE, warning=FALSE}
+data1 <- read.table("C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/1. Datos brutos/ENFR-2009 Base Usuario.txt", header = TRUE, sep = "|", dec = ",")
+
+enfr_2009 <- data1 %>% 
+  select(PRVNC, REGION, ITF_UC_QUINTILES, BHCH04, BHCH05, RANGEDAD, NIVINSTR, PROMEDIO_FV_DIARIO, BHCV01, BHCV03, BHCV02, CANT_COMPONENTES, BHCV06, BHCV09, BHCV08) %>%
+  rename(provincia = PRVNC, 
+         quintil_ingresos = ITF_UC_QUINTILES, 
+         genero = BHCH04, 
+         edad = BHCH05, 
+         rango_edad = RANGEDAD, 
+         nivel_de_instruccion = NIVINSTR,
+         promedio_fyv_dia = PROMEDIO_FV_DIARIO) %>%
+  mutate(ano_edicion = "2009") %>% 
+  clean_names()
+```
+
+## ENFR 2013
+
+```{r message=FALSE, warning=FALSE}
+data2 <- read.table("C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/1. Datos brutos/ENFR2013_baseusuario.txt", header = TRUE, sep = "|", dec = ",")
+
+enfr_2013 <- data2 %>% 
+  select(COD_PROVINCIA, ITF_UC_QUINTILES, BHCH04, BHCH05, RANGO_EDAD, NIVEL_INSTRUCCION, PROMEDIO_FV_DIARIO, BHCV01, BHCV03, BHCV02, CANT_COMPONENTES, BHCV06, BHCV09, BHCV08) %>% 
+  rename(provincia = COD_PROVINCIA, 
+         quintil_ingresos = ITF_UC_QUINTILES, 
+         genero = BHCH04, 
+         edad = BHCH05, 
+         eango_edad = RANGO_EDAD,  # Posible error de tipeo
+         nivel_de_instruccion = NIVEL_INSTRUCCION,
+         promedio_fyv_dia = PROMEDIO_FV_DIARIO) %>% 
+  mutate(ano_edicion = "2013") %>% 
+  clean_names()
+```
+
+## ENFR 2018
+
+```{r message=FALSE, warning=FALSE}
+data3 <- read.table("C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/1. Datos brutos/ENFR 2018 - Base usuario.txt", header = TRUE, sep = "|", dec = ",")
+
+enfr_2018 <- data3 %>% 
+  select(cod_provincia, quintil_uc, bhch03, bhch04, rango_edad, nivel_instruccion, promedio_fv_diario, bhcv01, bhcv03, bhcv02, cant_componentes, bhcv06, bhcv09, bhcv08) %>% 
+  rename(provincia = cod_provincia, 
+         quintil_ingresos = quintil_uc, 
+         genero = bhch03, 
+         edad = bhch04, 
+         rango_edad = rango_edad, 
+         nivel_de_instruccion = nivel_instruccion,
+         promedio_fyv_dia = promedio_fv_diario) %>% 
+  mutate(ano_edicion = "2018")
+
+enfr_2018$promedio_fyv_dia <- as.numeric(enfr_2018$promedio_fyv_dia)
+```
+
+#  Estandarización de variables
+
+Antes de JOINEAR las BD se verifica si alguna de las variables tiene alguna categoria/rango/grupo con una codificacion diferente.
+
+```{r message=FALSE, warning=FALSE, echo = TRUE, results = "hide"}
+## Chequeo de diferencias en la nomenclatura de las categorias variables
+
+lista_base <- list(enfr_2009 = enfr_2009, enfr_2013 = enfr_2013, enfr_2018 = enfr_2018)
+
+for (i in names(lista_base)){
+  nombres <- lista_base[[i]]
+  print(i)
+  for (x in names(nombres)){
+    if(!(x %in% c("promedio_fyv_dia", "edad", "ingresos_mes_hogar"))){
+      print(x)
+      print(unique(nombres[[x]]))
+    }
+  }
+}
+```
+
+## Ajuste de codificación rango_edad en ENFR 2009
+
+```{r message=FALSE, warning=FALSE}
+enfr_2009 <- enfr_2009 %>% 
+  mutate(rango_edad = case_when(
+    rango_edad == 2 ~ 1,
+    rango_edad == 3 ~ 2,
+    rango_edad == 4 ~ 3,
+    rango_edad == 5 ~ 4,
+    rango_edad == 6 ~ 5
+  ))
+```
+
+# Unificación de las tres encuestas
+
+```{r message=FALSE, warning=FALSE}
+enfr_total <- bind_rows(enfr_2009, enfr_2013, enfr_2018)
+```
+
+# Recodificación de variables
+
+```{r message=FALSE, warning=FALSE}
+# Provincia
+enfr_total <- enfr_total %>% 
+  mutate(provincia = case_when(
+    provincia == 2 ~ "CABA",
+    provincia == 6 ~ "Buenos Aires",
+    provincia == 10 ~ "Catamarca",
+    provincia == 22 ~ "Chaco",
+    provincia == 26 ~ "Chubut",
+    provincia == 14 ~ "Cordoba",
+    provincia == 18 ~ "Corrientes",
+    provincia == 30 ~ "Entre Rios",
+    provincia == 34 ~ "Formosa",
+    provincia == 38 ~ "Jujuy",
+    provincia == 42 ~ "La Pampa",
+    provincia == 46 ~ "La Rioja",
+    provincia == 50 ~ "Mendoza",
+    provincia == 54 ~ "Misiones",
+    provincia == 58 ~ "Neuquen",
+    provincia == 62 ~ "Rio Negro",
+    provincia == 66 ~ "Salta",
+    provincia == 70 ~ "San Juan",
+    provincia == 74 ~ "San Luis",
+    provincia == 78 ~ "Santa Cruz",
+    provincia == 82 ~ "Santa Fe",
+    provincia == 86 ~ "Santiago del Estero",
+    provincia == 90 ~ "Tucuman",
+    provincia == 94 ~ "Tierra del Fuego"
+  ))
+
+# Género
+enfr_total <- enfr_total %>% 
+  mutate(genero = case_when(
+    genero == 1 ~ "Varon",
+    genero == 2 ~ "Mujer"
+  ))
+
+# Nivel de instrucción
+enfr_total <- enfr_total %>% 
+  filter(nivel_de_instruccion != 8) %>% 
+  mutate(nivel_de_instruccion = case_when(
+    nivel_de_instruccion %in% 1:3 ~ "Primario",
+    nivel_de_instruccion %in% 4:5 ~ "Secundario",
+    nivel_de_instruccion %in% 6:7 ~ "Terc/Univ"
+  ))
+
+
+# Quintil de ingreso
+enfr_total <- enfr_total %>% 
+  filter(!is.na(quintil_ingresos)) %>% 
+  mutate(quintil_ingresos = as.character(quintil_ingresos))
+
+# Rango edad
+enfr_total <- enfr_total %>% 
+  mutate(rango_edad = as.character(rango_edad))
+
+```
+
+## Creacion de la variable respuesta
+
+```{r}
+# Consumo de frutas y verduras
+enfr_total <- enfr_total %>% 
+  filter(!is.na(promedio_fyv_dia)) %>% 
+  mutate(cumple_nocumple = ifelse(promedio_fyv_dia >= 3, "Cumple", "No_cumple"))
+```
+
+
+## Construcción del índice compuesto de NBI
+
+```{r message=FALSE, warning=FALSE}
+
+enfr_total <- enfr_total %>% 
+  mutate(
+    tipo_vivienda = ifelse(bhcv01 %in% c("1", "3"), 0, 1),
+    tipo_suelo = ifelse(bhcv03 %in% c("1", "2"), 0, 1),
+    tipo_cocina = ifelse(bhcv06 %in% c("1", "2"), 0, 1),
+    tipo_baño = ifelse(bhcv09 == "1", 0, 1),
+    tipo_agua = ifelse(bhcv08 %in% c("1", "2"), 0, 1)
+  )
+
+# Hacinamiento
+enfr_total <- enfr_total %>% filter(bhcv02 != "99")
+
+enfr_total <-enfr_total %>%
+  mutate(condicion1 = bhcv02 == 1,
+         condicion1b = cant_componentes <= 3,
+         condicion2 = bhcv02 == 2,
+         condicion2b = cant_componentes <= 6,
+         condicion3 = bhcv02 == 3,
+         condicion3b = cant_componentes <= 9,
+         condicion4 = bhcv02 == 4,
+         condicion4b = cant_componentes <= 12,
+         condicion5 = bhcv02 == 5,
+         condicion5b = cant_componentes <= 15,
+         condicion6 = bhcv02 == 6,
+         condicion6b = cant_componentes <= 18,
+         condicion7 = bhcv02 == 7,
+         condicion7b = cant_componentes <= 21,
+         condicion8 = bhcv02 == 8,
+         condicion8b = cant_componentes <= 24,
+         condicion9 = bhcv02 == 9,
+         condicion9b = cant_componentes <= 27,
+         condicion10 = bhcv02 == 10,
+         condicion10b = cant_componentes <= 30,
+         condicion11 = bhcv02 == 11,
+         condicion11b = cant_componentes <= 33,
+         condicion12 = bhcv02 == 12,
+         condicion12b = cant_componentes <= 36,
+         tipo_hacinamiento = ifelse((condicion1 & condicion1b)|
+                                      (condicion2 & condicion2b)|
+                                      (condicion3 & condicion3b)|
+                                      (condicion4 & condicion4b)|
+                                      (condicion5 & condicion5b)|
+                                      (condicion6 & condicion6b)|
+                                      (condicion7 & condicion7b)|
+                                      (condicion8 & condicion8b)|
+                                      (condicion9 & condicion9b)|
+                                      (condicion10 & condicion10b)|
+                                      (condicion11 & condicion11b)|
+                                      (condicion12 & condicion12b), 0, 1))
+
+
+# Índice NBI dicotómico
+enfr_total <- enfr_total %>% 
+  mutate(sum_tipos = tipo_vivienda + tipo_suelo + tipo_cocina + 
+           tipo_baño + tipo_agua + tipo_hacinamiento,
+         indice_nbi_hogar_dic = as.numeric(sum_tipos >= 1))
+
+```
+
+# Armado de base fina
+
+```{r message=FALSE, warning=FALSE}
+ENFR_limpia <- enfr_total %>% 
+  select(ano_edicion, provincia, cumple_nocumple, genero, edad, rango_edad, nivel_de_instruccion, quintil_ingresos, indice_nbi_hogar_dic, promedio_fyv_dia, region)
+
+```
+
+## Validación
+
+```{r message=FALSE, warning=FALSE}
+ENFR_limpia %>% group_by(ano_edicion) %>% summarise(n = n())
+colSums(is.na(ENFR_limpia))
+summary(ENFR_limpia)
+
+```
+
+# Exportación
+
+```{r message=FALSE, warning=FALSE}
+write_csv(ENFR_limpia, "C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/2. Procesamiento/ENFR_limpia.csv")
+saveRDS(ENFR_limpia, "C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/2. Procesamiento/ENFR_limpia.rds")
+
+```
+
