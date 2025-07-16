@@ -1,0 +1,463 @@
+---
+title: "Principales resultados"
+author: "López Mathias Joel"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    toc_depth: '3'
+    fig_caption: true
+    includes:
+      in_header: preamble.tex
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    collapsed: true
+    smooth_scroll: true
+    theme: journal
+    highlight: kate
+    df_print: paged
+    code_folding: show
+---
+
+```{r, include=FALSE}
+options(encoding = "UTF-8")
+```
+
+# **Alimentación saludable y entorno**: estudio del consumo de frutas y verduras en la población adulta de Argentina con un enfoque eco-epidemiológico
+
+## Introduccion
+
+El bajo consumo de frutas y verduras (CFyV) es uno de los factores de riesgo más relevantes para las enfermedades crónicas no transmisibles (ECNT), que constituyen la principal causa de muerte actual a nivel global, especialmente en países en vía de desarrollo, donde representan más del 70% de las muertes (WHO, 2024; ENFR, 2019). Este bajo consumo está asociado a una mayor carga de enfermedades cardíacas, digestivas y cerebrovasculares (Savino, 2011). Frente a este panorama, la OMS recomienda un consumo mínimo diario de 400 g de frutas y verduras. Sin embargo, datos nacionales muestran que en la población adulta argentina solo el 6% cumple con ese requisito (ENFR, 2019).
+
+## Objetivos
+
+Analizar los patrones de consumo de frutas y verduras en la población adulta argentina, así como su evolución entre 2009 y 2018, con foco en desigualdades sociales, económicos y territoriales, desde un enfoque *eco-epidemiológico*.
+
+## Materiales y Métodos
+
+### Herramienta de trabajo
+
+Los análisis fueron realizados con el software R, y los principales paquetes utilizados fueron: *ggplot2* y *dplyr* de *tidyverse*, *Dharma* y *glmTMB*.
+
+### Bases de datos
+
+-   Encuesta Nacional de Factores de Riesgo (ENFR, ediciones: 2009, 2013 y 2018).
+-   Censo Nacional Agropecuario (CNA, ediciones: 2008 y 2018)
+-   Censo Nacional (CN, edición: 2010)
+
+[*Fuente: INDEC*](https://www.indec.gob.ar/indec/web/Institucional-Indec-BasesDeDatos-2)
+
+### Variables
+
+De las tres ediciones de la **ENFR** se extrajeron los datos para construir las variables:
+
+-   *Cumplimiento en el CFyV*, como variable respuesta, que da cuenta de si la persona encuestada cumple o no con el requisito mínimo recomendado por la OMS.
+-   *Año de edición* de la encuesta, que da cuenta de la temporalidad (2009, 2013 y 2018).
+-   *Género* de la persona encuestada (varón/mujer) y el *rango de edad* al que pertenece (con cinco niveles).
+-   *Nivel máximo de instrucción alcanzado* (tres niveles: Nivel Primario, Nivel Secundario y Nivel Terciario-Superior).
+-   *Quintil de ingresos del hogar* y *carencias* de la vivienda (dos niveles: la vivienda tiene *carencias* o *no tiene carencias*, índice compuesto construido a partir de la información estructural de la vivienda).
+-   *Jurisdicción* de pertenencia de la persona encuestada.
+
+Del **CN** se extrajeron los datos de *Necesidades Básicas Insatisfechas* (NBI) de cada provincia para el año 2010. Los datos se transformaron al tipo de dato cualitativo (variable categorizada en terciles).
+
+Del **CNA** se extrajeron los datos de *Explotaciones Agropecuarias* (EAP en Ha) frutihortícola de cada provincia (ediciones 2008 y 2013); datos transformados en una variable cualitativa en terciles.
+
+### Procesamiento de datos
+
+En el procesamiento y preparación de los datos para el análisis se realizaron:
+
+-   Construcciones de índices compuestos.
+
+-   Exploración y manejo de los NA.
+
+-   Integración de las diferentes fuentes y procesamiento de grandes volúmenes de datos (data integration, big data processing),incluyendo tareas de: limpieza, recodificación de las variables.
+
+### Análisis descriptivo y exploratorio
+
+En la descripción de la muestra se realizaron análisis descriptivos y exploratorios de los datos: frecuencia absoluta y porcentaje para cada categorías de las variables cualitativas y media y desvío estándar para las variables cuantitativas. Más detalladamente, se analizaron tendencias generales, relaciones entre las variables (Correlación y Colinealidad) y potenciales interacciones, mediante gráficos de perfiles, entre variables predictoras para evaluar posibles interacciones.
+
+### Modelando la variable respuesta
+
+Para analizar el cumplimiento del CFyV se ajustaron *modelos lineales generalizados mixtos* con *distribución Bernoulli* y función de enlace *logit*.
+
+> [!NOTE] Los Modelos Lineales Generalizados Mixtos (MLGM) son una herramienta estadística poderosa que combina las ventajas de los modelos lineales generalizados (GLM) y los modelos lineales mixtos (MLM). Permiten analizar datos donde la variable de respuesta no sigue necesariamente una distribución normal, y donde existen correlaciones o estructuras complejas entre las observaciones.
+
+La estrategia de modelado implicó una metodología de pasos sucesivos, en donde inicialmente se construyeron *modelos simples* para luego dar lugar a *modelos complejos*. Estos últimos estaban integrados por diferentes interacciones entre sus variables predictoras las cuales permiten estudiar los objetivos del trabajo de investigación. Para poder abordar los tópicos propuestos, se dividieron a los modelos en dos secciones: en la **sección A** se estudiaron los modelos que responden a los **Determinantes socioeconómicos** del cumplimiento en el CFyV y en la **sección B** se estudiaron aquellos que responden **Determinantes socioeconómicos y ambientales**. Se trabajó con un nivel de significación del 0.01.
+
+El criterio utilizado para seleccionar y analizar el *modelos complejos* a estudiar en cada sección fue el *Criterio de Información de Akaike* (AIC). Por su parte, la magnitud del efecto se estimó mediante el cálculo de los Odds Ratio Ajustados, con sus respectivos intervalos de confianza (IC 95%).
+
+> [!NOTE] Los Odds Ratio Ajustados son una medida de asociación que estiman la fuerza de la relación entre una exposición (ej: fumar) y un resultado (ej: enfermedad pulmonar), teniendo en cuenta (ajustando por) otras variables que podrían influir en esa relación (ej: edad del individuo).
+
+## Resultados principales
+
+### Exploratorio
+
+En el manejo de los datos faltantes (NA) se recurrió a la eliminación de los mismos ya que el porcentaje no superó el 5% del total de la muestra (Figura 1), teniendo en cuenta la bibliografía sugerida (Graham, 2009; Graham, Olchowski, & Gilreath, 2007).
+
+```{r, echo = FALSE, fig.cap="*Figura 1. Diagrama de flujo de la muestra analítica y los recortes utilizados para cada uno de los procesos de estudio. La eliminación de datos, discriminados por criterios, se muestra con el signo “-”.*", out.width="70%"}
+knitr::include_graphics("C:/Tesis/Figuras/muestra analitica ENFR-Muestra analitica .drawio.png")
+
+```
+
+<br>
+
+La muestra estuvo compuesta por 94.463 personas mayores de 18 años, con un promedio de 31.488 participantes por edición. El consumo promedio de frutas y verduras fue bajo en los tres períodos analizados (2009, 2013 y 2018), con valores diarios de 1,97; 1,90 y 2,07 porciones respectivamente. Solo el 20,5% de la población alcanzó el consumo mínimo recomendado, con una mayor proporción de mujeres entre quienes sí lo lograron (62,9% vs 37,1%).
+
+En cuanto al análisis descriptivo del CNA (2009 y 2018), se relevaron un total de 1.293.138 hectáreas de EAP frutihortícolas. En ambas ediciones, Tierra del Fuego presentó la menor superficie cultivada y Mendoza la mayor. Del total de hectáreas relevadas, el 66,54% corresponde a cultivos frutales y el 33,46% a hortalizas.
+
+La variable que daba cuenta del NSE a nivel provincial (jusrisdicción) resulto no significativa para la variable respuesta "CFyV" (p.valor \> 0,01), con este resultado se opto por descartarla de los modelos analizados.
+
+### Determinantes socioeconómicos
+
+```{r message=FALSE, warning=FALSE, echo=TRUE, results = "hide"}
+# Librerias
+
+library(ggplot2)
+library(forestplot)
+library(glmmTMB)
+library(emmeans)
+library(dplyr)
+library(sf)
+library(scales)
+library(RColorBrewer)
+library(gridExtra)
+library(wesanderson)
+library(ggthemes)
+library(gt)
+```
+
+
+
+*Tabla 1. Modelos múltiples alternativos evaluados y sus AIC correspondientes. Todas las variables incluidas de manera aditiva (rango de edad, carencias de la vivienda, nivel de instrucción) resultaron significativas (p < 0,01).* 
+```{r message=FALSE, warning=FALSE, echo=FALSE, out.width="70%"}
+library(gt)
+library(dplyr)
+
+tabla <- tribble(
+  ~Modelo, ~Variables, ~`P valor`, ~AIC,
+  "Modelo Nulo", "-", "-", "94.969",
+  "Modelo 1", "Quintil de ingreso * Año de edición * Género", "0,47", "91.911",
+  "Modelo 2", "Quintil de ingreso * Año de edición /\nGénero * Quintil de ingreso", "< 0,01 /\n< 0,01", "91.901",
+  "Modelo 3", "Género * Año de edición /\nGénero * Quintil de ingreso", "0,69 /\n< 0,01", "91.927"
+)
+
+tabla %>%
+  gt() %>%
+  tab_header(title = md("**Modelos ajustados**")) %>%
+  cols_label(
+    Modelo = "Modelo alternativo",
+    Variables = "Variables incluidas en las Interacción",
+    `P valor` = "Sig de las interacciones (p valor)",
+    AIC = "AIC"
+  ) %>%
+  tab_style(
+    style = cell_text(weight = "bold", align = "center"),
+    locations = list(
+      cells_column_labels(everything()),
+      cells_body(columns = Modelo)
+    )
+  ) %>%
+  tab_style(
+    style = cell_text(align = "center"),
+    locations = cells_body()
+  )
+
+```
+
+
+#### Modelo seleccionado:
+
+```         
+   CFyV = Genero * Quintil de ingresos + Quintil de ingresos * Año de edicion + Rango de edad  
+                    + Nivel de instrucción + Carencias del hogar  + Jurisdiccion
+```
+
+Los resultados más destacados mostraron que la **brecha** en el cumplimiento recomendado de CFyV, a través de los años, se vio modificada según el nivel socioeconómico del hogar al cual pertenece el/la encuestado/a. Se observó que, entre 2009 y 2018, la brecha entre los individuos de menor y mayor ingreso se amplió. En el año 2009 las viviendas del último quintil de ingreso presentaron un odds de cumplimiento del CFyV 38% mayor que las viviendas del 1er quintil. Esta diferencia aumentó a 50% en el 2013 y a 75% para el año 2018 (Figura 2 y 3).
+
+Por otro lado, se pudo identificar una **brecha** en el CFyV entre mujeres y varones, dependiente del quintil de ingreso al que pertenecía su hogar y esta incrementó a medida que el ingreso del hogar aumentó. Los resultados mostraron, siempre, un mayor cumplimiento recomendado en mujeres, con excepción del primer quintil, en donde no se encontraron diferencias (2º quintil: las mujeres tuvieron un 35% mas de odds que los varones, valor que llegó al 49% en el 5º quintil de ingreso del hogar) (Figura 2 y 4).
+
+Respecto a las demás variables incluidas en el modelo: se encontraron mejores pronósticos en el CFyV para individuos con alto nivel de instrucción en relación con los de bajo nivel (OR: Terciario/Universitario vs Primario: 1,71 [IC:1,63 - 1,80]). Pertenecer a una vivienda sin carencias está asociado a un incremento en el cumplimiento de CFyV en comparación con viviendas con al menos una carencia (OR: Viviendas no carentes vs carentes: 1,15 [IC: 1,07 - 1,24]). La variable de control “rango de edad” se asoció positivamente con el CFyV (OR: 65 años y más vs 18 a 24 años: 2,54 [IC: 2,38 - 2,72], Figura 2).
+
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+## Forest plot
+
+# Datos para forestplot
+
+dataset_forest <- data.frame(
+  Variables = c("Terciario/Universitario vs Primario", "65 años y mas vs 18 - 24 años", 
+                "Viviendas no carentes vs carentes", "Mujeres vs Varones (1er quintil)",
+                "Mujeres vs Varones (2do quintil)", "Mujeres vs Varones (3er quintil)",
+                "Mujeres vs Varones (4to quintil)", "Mujeres vs Varones (5to quintil)", 
+                "Edicion 2009: 5to quintil vs 1er quintil", "Edicion 2013: 5to quintil vs 1er quintil ", 
+                "Edicion 2018: 5to quintil vs 1er quintil"),
+  OR = c(1.71, 2.54, 1.15, 1.07, 1.35, 1.32, 1.44, 1.49, 1.38, 1.50, 1.75),
+  Lower_IC = c(1.63, 2.38, 1.07, 0.98, 1.25, 1.23, 1.34, 1.38, 1.26, 1.36, 1.58),
+  Upper_IC = c(1.80, 2.72, 1.24, 1.15, 1.46, 1.43, 1.55, 1.59, 1.51, 1.65, 1.93))
+
+
+# Crear las etiquetas combinando nombres e intervalos
+labeltext <- cbind(
+  Variable = dataset_forest$Variables,
+  OR_IC = sprintf("%.2f [%.2f - %.2f]", dataset_forest$OR, dataset_forest$Lower_CI, dataset_forest$Upper_CI))
+
+
+forestplot(
+  labeltext = dataset_forest$Variable,               
+  mean = dataset_forest$OR,                          
+  lower = dataset_forest$Lower_IC,                   
+  upper = dataset_forest$Upper_IC,                   
+  xlog = TRUE,                          
+  title = "Odds Ratios (OR) ",
+  col = fpColors(box = "black", lines = "black", zero = "red"),
+  zero = 1,
+  boxsize = 0.05,                               
+  txt_gp = fpTxtGp(
+    label = gpar(fontsize = 13),           
+    ticks = gpar(fontsize = 20),            
+    xlab = gpar(fontsize = 14),            
+    title = gpar(fontsize = 16)))
+
+
+```
+
+
+*Figura 2. Forestplot de los Odds Ratios Ajustados para las comparaciones entre los niveles de una variables y variables con interaccion integradas en el modelo seleccionado. Los intervalos de confianza (IC) que contengan el valor 1 son resultaron no significativos para la variable respuesta.*
+
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+
+
+ENFR_t_NBI_CNA <- readRDS("C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/3. Datos procesados/base_final_para_modelo.rds")
+
+
+ModeloB <- glmmTMB(cumple_no_cumple_fy_v ~ genero*quintil_ingresos + quintil_ingresos*ano_edicion + rango_edad + nivel_de_instruccion + indice_nbi_hogar_dic  + (1|provincia ), ENFR_t_NBI_CNA, family = binomial)
+
+
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+#· Grafico interaccion Quintil ingreso * Año de edicion :
+
+em_IC_QuintilVSano <- emmeans(ModeloB, revpairwise ~ quintil_ingresos|ano_edicion, type = "response")
+Emm_df <- as.data.frame(em_IC_QuintilVSano$emmeans)
+
+Grafico_poster_rev <- ggplot(Emm_df, aes(x = ano_edicion, y = prob, color = quintil_ingresos)) +
+  geom_point(size = 3, shape = 16, alpha = 0.7, position = position_dodge(width = 0.6)) + 
+  geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL), 
+                position = position_dodge(width = 0.6), 
+                width = 0.2, size = 1) + 
+  labs(
+    title = "CFyV según anio de edicion e ingresos del hogar",
+    color = "Quintil de ingreso",
+    x = "Anio de edicion",
+    y = "Probabilidad del CFyV"
+  ) +
+  theme_minimal() +
+  scale_color_manual(
+    values = c("1" = "#FF4D79", "2" = "#D81B60", "3" = "#A40A3C", "4" = "#730026", "5" = "#4A001F"),
+    name = "Quintil de ingreso"
+  ) +
+  theme(
+    panel.background = element_rect(fill = "white"),
+    plot.background = element_rect(fill = "white"),
+    plot.title = element_text(size = 15, face = "bold", hjust = 0.5, margin = margin(t = 20, b = 20)),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 12),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    plot.margin = margin(t = 20, r = 20, b = 20, l = 50))
+
+
+print(Grafico_poster_rev)
+
+                        
+```
+
+*Figura 3. Probabilidad estimada del cumplimiento de CFyV según el quintil de ingresos del hogar para las tres ediciones de la ENFR (2009, 2013 y 2018). Donde la intensidad de la coloración indica moverse de hogares de menores a mayores quintiles de ingresos en los hogares. Las barras de error representan los intervalos de confianza del 95%. Los valores se encuentran ajustados a: rangos de edad 1 (18 - 24 años), hogares no carentes, nivel de instrucción primario y año de edición 2009.*
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+## Grafico interaccion Genero * Quintil de ingreso:
+
+# Genero*Quintil:
+IC_generoVSquintil_PA <- emmeans(ModeloB, pairwise ~ genero|quintil_ingresos, type = "response")
+
+Graf_Genero_Quintil_vsCumple_PA <- as.data.frame(IC_generoVSquintil_PA$emmeans)
+
+
+Grafico_Genero_Quintil_PA <- ggplot(Graf_Genero_Quintil_vsCumple_PA, aes(x = quintil_ingresos, y = prob, color = genero)) +
+  geom_point(size = 3, shape = 16, alpha = 0.8) +
+  geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL), 
+                width = 0.05, size = 0.7) +
+  scale_color_manual(values = c("Mujer" = "#A40A3C", "Varon" = "#1B9E77")) + 
+  labs(
+    title = "CFyV según ingreso del hogar y género",
+    color = "Género",
+    x = "Quintil de ingreso",
+    y = "Probabilidad del CFyV",
+    caption = ""
+  ) +
+  theme_minimal() +
+  theme(
+    panel.background = element_rect(fill = "white"),
+    plot.background = element_rect(fill = "white"),
+    plot.title = element_text(size = 17, face = "bold", hjust = 0.5, margin = margin(t = 20, r = 20, b = 40, l = 40)),
+    legend.title = element_text(size = 14),
+    axis.title.x = element_text(size = 14, face = "plain"),
+    axis.title.y = element_text(size = 14, face = "plain"),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    plot.margin = margin(t = 20, r = 20, b = 20, l = 40)
+  )
+
+
+print(Grafico_Genero_Quintil_PA)
+
+```
+
+*Figura 4. Probabilidad estimada del cumplimiento del CFyV según el género de la persona encuestada y el quintil de ingreso del hogar al que pertenecen, con intervalo de confianza del 95%. Los valores se encuentran ajustados a: rangos de edad 1 (18 - 24 años), hogares no carentes, nivel de instrucción primario y año de edición 2009.*
+
+\newpage
+
+```{r, fig.cap="*Figura 5. Distribución geográfica de las probabilidades estimadas por el modelo seleccionado en el cumplimiento del CFyV para el territorio Argentino según la edición de la ENFR. Los colores representan las probabilidades estimadas de la población que cumple con el CFyV, variando de amarrillo (bajo cumplimiento) a rojo (alto cumplimiento).*", out.width="90%"}
+knitr::include_graphics("C:/Tesis/Figuras/Media de probabillidad estimada del CFyV para cada provincia.png")
+
+```
+
+<br>
+
+### Determinantes socioeconomicos y ambientales
+
+#### Modelo seleccionado:
+
+```         
+    CFyV =  Genero * Quintil de ingresos + Quintil de ingresos * Año de edicion + 
+    EAP Frutihorticola * Año de edicion + Rango de edad + Nivel de instrucción + 
+                      Carencias de la vivienda + Jurisdiccion
+```
+
+Al analizar qué es lo que sucedía en el CFyV según el nivel de EAP frutihortícola que tenía cada provincia y el año, se observó que en el 2009, no se encontró evidencia de relación entre el CFyV y la EAP frutihortícola. En cambio, para el año 2018, si se encontró evidencia de un consumo diferencial. Encuestados/as de provincias pertenecientes al tercil más bajo de EAP frutihortícola presentaron, en promedio, un 59% mas de odds de cumplor con la recomendacion del CFyV que los individuos integrantes de provincias pertenecientes al tercil medio y un 53% más de odds que los individuos integrantes de provincias de terciles altos (Figura 6 y 7).
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+## Forest plot
+
+dataset_forest <- data.frame(
+  Variables = c( "Terciario/Universitario vs Primario", "65 años y mas vs 18 - 24 años", 
+                 "Viviendas carentes vs no carente", "Mujeres vs Varones (1er quintil)",
+                 "Mujeres vs Varones (2do quintil)", "Mujeres vs Varones (3er quintil)",
+                 "Mujeres vs Varones (4to quintil)", "Mujeres vs Varones (5to quintil)", 
+                 "Edicion 2009: 5to quintil vs 1er quintil", "Edicion 2018: 5to quintil vs 1er quintil",
+                 "Edicion 2009: EAP bajo vs EAP alto", "Edicion 2018: EAP bajo vs EAP alto"),
+  OR = c(1.66, 2.41, 1.17, 1.07, 1.37, 1.32, 1.49, 1.43, 1.56, 1.78, 1.14, 1.53),
+  Lower_IC = c(1.55, 2.15, 1.07, 0.97, 1.25, 1.20, 1.36, 1.31, 1.36, 1.54, 0.84, 1.13),
+  Upper_IC = c(1.79, 2.70, 1.28, 1.18, 1.52, 1.45, 1.63, 1.56, 1.78, 2.05, 1.55, 2.10))
+
+
+
+# Crear las etiquetas combinando nombres e intervalos
+labeltext <- cbind(
+  Variable = dataset_forest$Variables,
+  OR_IC = sprintf("%.2f [%.2f - %.2f]", dataset_forest$OR, dataset_forest$Lower_CI, dataset_forest$Upper_CI))
+
+
+forestplot(
+  labeltext = dataset_forest$Variable,               
+  mean = dataset_forest$OR,                          
+  lower = dataset_forest$Lower_IC,                   
+  upper = dataset_forest$Upper_IC,                   
+  xlog = TRUE,                          
+  title = "Odds Ratios (OR) ",
+  col = fpColors(box = "black", lines = "black", zero = "red"),
+  zero = 1,
+  boxsize = 0.05,                               
+  txt_gp = fpTxtGp(
+    label = gpar(fontsize = 10),           
+    ticks = gpar(fontsize = 20),            
+    xlab = gpar(fontsize = 14),            
+    title = gpar(fontsize = 16)))
+
+
+```
+
+*Figura 6. Forestplot de los Odds Ratios Ajustados para las comparaciones entre los niveles de una variables y variables con interaccion integradas en el modelo seleccionado. Los intervalos de confianza (IC) que contengan el valor 1 son resultaron no significativos para la variable respuesta.*
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+Modelo4_09y18_FH <- glmmTMB(cumple_no_cumple_fy_v ~ genero*quintil_ingresos + quintil_ingresos*ano_edicion + eap_frutihorticola_ter*ano_edicion + rango_edad + nivel_de_instruccion + indice_nbi_hogar_dic + (1|provincia ), ENFR_t_NBI_CNA %>% filter(ano_edicion != 2013 & provincia != "CABA" & eap_frutihorticola_ter != "NA"), family = binomial)
+
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+# Grafico de EAP frutihorticola * Año de edicion (ediciones 2009 y 2018)
+
+IC_Amb_frthort_ano <- emmeans(Modelo4_09y18_FH, pairwise ~ eap_frutihorticola_ter|ano_edicion, type = "response")
+Graf_Int_EAP_anovsCumple_Amb <- as.data.frame(IC_Amb_frthort_ano$emmeans)
+
+
+Grafico_final_EAP <- ggplot( Graf_Int_EAP_anovsCumple_Amb, mapping = aes( x =  ano_edicion , y = prob, color = eap_frutihorticola_ter))+
+  geom_point(size = 5, shape = 16, alpha = 0.8, position = position_dodge(width = 0.6))+
+  geom_errorbar(aes(ymin = asymp.LCL , ymax= asymp.UCL ), 
+                width = 0.03, size = 0.7, position = position_dodge(width = 0.6))+
+  labs(
+    title = "CFyV segun el grupo de EAP frutihorticola",
+    color = "EAP Frutihorticola" ,
+    x = "Anio de edicion" ,
+    y = "Probabilidad del CFyV",
+    caption = "") +
+  theme_minimal()+
+  theme(
+    panel.background = element_rect(fill = "white"),  # Fondo blanco
+    plot.background = element_rect(fill = "white"),
+    plot.title = element_text(size = 15, face = "bold", hjust = 0.5, margin = margin(t = 20, r = 20, b = 40, l = 40)),
+    legend.title = element_text(size = 14),
+    axis.title.x = element_text(size = 14, face = "plain"),
+    axis.title.y = element_text(size = 14, face = "plain"),
+    plot.margin = margin(t = 20, r = 20, b = 20, l = 40)) +  scale_color_manual(
+      values = c("Bajo" = "#D2B48C", "Medio" = "#66CDAA", "Alto" = "#228B22"),
+      name = "EAP Frutihortícola")
+
+print(Grafico_final_EAP)
+```
+
+*Figura 7. Probabilidad estimada del cumplimiento de CFyV en el año 2009 y 2018 para la población en estudio de provincias pertenecientes a diferentes niveles de EAP frutihortícola, con intervalo de confianza del 95%. Los valores se encuentran ajustados a: rangos de edad 1 (18 - 24 años), primer quintil de ingresos, hogares no carentes, género femenino y nivel de instrucción primario.*
+
+## Conclusiones y Discusiones
+
+Esta investigación aporta **evidencia de la existencia de desigualdades** en el acceso a una buena alimentación en Argentina entre 2009 y 2018, desigualdades asociadas a **determinantes socioeconómicos** en distintos estratos (individual, del hogar y provincial). Se observó que el cumplimiento del consumo recomendado de frutas y verduras (CFyV) aumentó con el nivel socioeconómico, en función del ingreso, la educación y las condiciones de la vivienda, con diferencias de género que muestran que las mujeres tienen un mayor consumo a partir del segundo quintil de ingresos (Silveira et al., 2005; Silva, Simões, Nobre, & Cardoso, 2020) tienen un mayor CFyV.
+
+No se halló asociación significativa entre el CFyV y el nivel de necesidades básicas insatisfechas (NBI) provincial, resultado que se atribuye a las limitaciones de trabajar con variables agregadas a gran escala. De igual modo, si bien en 2018 se encontró una relación entre CFyV y superficie cultivada de EAP frutihortícolas, esta fue contraria a lo esperado, probablemente debido a que esta variable no refleja adecuadamente la disponibilidad real de alimentos, al no considerar el circuito de producción ni los múltiples actores de la cadena de mercado (Viteri & Campetella, 2015). Se destaca así la necesidad de incorporar variables que representen mejor los circuitos de proximidad, como los provistos por los Núcleos Agropecuarios Familiares (NAF), que concentran el 47% de la superficie hortícola y abastecen con productos locales y frescos (Ferratto et al., 2010; Blanco et al., 2017).
+
+Si consideramos que la alimentación saludable es un factor clave en la prevención de las Enfermedades Crónicas No Transmisibles (Ezzati & Riboli, 2013), y tenemos en cuenta los hallazgos reportados en esta investigación, más las fuentes oficiales (ENFR, 2018), entendemos que es crucial generar políticas públicas que incrementen e igualen el consumo de este grupo de alimentos. Una mala alimentación no solo tiene un **impacto sobre la salud**, generando problemas en la población, sino que también tiene un **impacto sobre el Estado**, debido a la presión y costos que las enfermedades ejercen sobre los sistemas de salud (Abegunde et al., 2007). Por otro lado, la efectivización y cumplimiento del Derecho a la alimentación no solo impacta en la salud y la soberanía alimentaria, mejorando la calidad de vida de la población, sino que también asegura el abordaje progresivo de los demás derechos de la ciudadanía (Borrás & García, 2020 ). En este sentido, las acciones apuntadas a **reducir el precio de alimentos saludables** son tan importantes como las que generan un conocimiento sobre los beneficios de una alimentación saludable (Ezzati & Riboli, 2013). Por lo que se propone como acción clave el apoyo del Estado sobre el sector frutihortícola de cercanía, que ha reportado un crecimiento en los últimos años (Senasa, 2023), ya que este sector es el eslabón fundamental para satisfacer y contribuir al mercado de cercanía con productos frescos y de estación.
+
+## Bibliografía
+
+*Abegunde, D. O., Mathers, C. D., Adam, T., Ortegon, M., & Strong, K. (2007). The burden and costs of chronic diseases in low-income and middle-income countries. The Lancet, 370(9603), 1929–1938.*
+
+*Blanco, M. S., Cipolletta, F. P., Marchetti, A., & Otero, E. M. B. (2017). Una mirada integral hacia el consumo de frutas y hortalizas. Trabajo Final de Graduación. Escuela de Nutrición, Facultad de Medicina–UBA, CABA–Argentina.*
+
+*Borrás, G., & otros. (2013). Políticas alimentarias en Argentina, derechos y ciudadanía. Facultad de Ciencias Económicas. Universidad de Buenos Aires.*
+
+*ENFR. (2019). 4° Encuesta Nacional de Factores de Riesgo, INDEC. <https://www.indec.gob.ar/ftp/cuadros/publicaciones/enfr_2018_resultados_definitivos.pdf>*
+
+*Ezzati, M., & Riboli, E. (2013). Behavioral and dietary risk factors for noncommunicable diseases. New England Journal of Medicine, 369(10), 954–964.*
+
+*Ferratto, J. A., Mondino, M. C., Grasso, R. O., Ortiz Mackinson, M. P., Longo, A., Carrancio, L. A., Firpo, I. T., Rotondo, R., Zembo, J. C., Castro, G., & otros. (2010). Buenas Prácticas Agrícolas para la Agricultura Familiar: Cadena de las principales hortalizas de hojas en Argentina.*
+
+*Graham, J. W. (2009). Missing data analysis: Making it work in the real world. Annual Review of Psychology, 60, 549–576.*
+
+*Graham, J. W., Olchowski, A. E., & Gilreath, T. D. (2007). How many imputations are really needed? Some practical clarifications of multiple imputation theory. Prevention Science, 8(3), 206–213.*
+
+*Savino, P. (2011). Obesidad y enfermedades no transmisibles relacionadas con la nutrición. Revista Colombiana de Cirugía, 26(3), 180–195.*
+
+*Servicio Nacional de Sanidad y Calidad Agroalimentaria, & Ministerio de Agricultura, Ganadería y Pesca. (2023, enero 6). Agricultura familiar: En 2022 aumentó la inscripción de unidades productivas en el país. <https://www.argentina.gob.ar/noticias/agricultura-familiar-en-2022-aumento-la-inscripcion-de-unidades-productivas-en-el-pais>*
+
+*Silva, H. H. da C. F., Simões, T. C., Nobre, A. A., & Cardoso, L. de O. (2020). Factores asociados al consumo de frutas y verduras en Argentina: un estudio multinivel. Revista Argentina de Salud Pública, 11(42), 15–21.*
+
+*Viteri, M. L., & Campetella, A. L. (2018). Mercados mayoristas de frutas y hortalizas en la Argentina: una mirada desde el campo social. Revista Horticultura Argentina, 37(92), 61–76.*
+
+*World Health Organization. (2002). Informe sobre la salud en el mundo 2002: Reducir los riesgos y promover una vida sana. World Health Organization. <https://iris.who.int/bitstream/handle/10665/42557/WHR_2002_spa.pdf>*
+
+*World Health Organization. (2004, diciembre 23). Noncommunicable diseases. <https://www.who.int/es/news-room/fact-sheets/detail/noncommunicable-diseases>*

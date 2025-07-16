@@ -111,6 +111,8 @@ enfr_2009 <- enfr_2009 %>%
     rango_edad == 5 ~ 4,
     rango_edad == 6 ~ 5
   ))
+
+
 ```
 
 # Unificación de las tres encuestas
@@ -148,15 +150,15 @@ enfr_total <- enfr_total %>%
     provincia == 82 ~ "Santa Fe",
     provincia == 86 ~ "Santiago del Estero",
     provincia == 90 ~ "Tucuman",
-    provincia == 94 ~ "Tierra del Fuego"
-  ))
+    provincia == 94 ~ "Tierra del Fuego"))
 
 # Género
 enfr_total <- enfr_total %>% 
   mutate(genero = case_when(
     genero == 1 ~ "Varon",
-    genero == 2 ~ "Mujer"
-  ))
+    genero == 2 ~ "Mujer"),
+    genero = factor(genero,
+                    levels = c("Mujer", "Varon")))
 
 # Nivel de instrucción
 enfr_total <- enfr_total %>% 
@@ -164,18 +166,26 @@ enfr_total <- enfr_total %>%
   mutate(nivel_de_instruccion = case_when(
     nivel_de_instruccion %in% 1:3 ~ "Primario",
     nivel_de_instruccion %in% 4:5 ~ "Secundario",
-    nivel_de_instruccion %in% 6:7 ~ "Terc/Univ"
-  ))
+    nivel_de_instruccion %in% 6:7 ~ "Terc/Univ"),
+    nivel_de_instruccion = factor(nivel_de_instruccion, 
+                                  levels = c("Primario", "Secundario", "Terc/Univ")))
 
 
 # Quintil de ingreso
+
 enfr_total <- enfr_total %>% 
   filter(!is.na(quintil_ingresos)) %>% 
-  mutate(quintil_ingresos = as.character(quintil_ingresos))
+  mutate(quintil_ingresos = factor(as.character(quintil_ingresos),
+                                   levels = c("1", "2", "3", "4", "5")))
+
 
 # Rango edad
-enfr_total <- enfr_total %>% 
-  mutate(rango_edad = as.character(rango_edad))
+enfr_total$rango_edad <- factor(as.character(enfr_total$rango_edad),
+                                levels = c("1", "2", "3", "4", "5"))
+
+# Año de edicion
+enfr_total$ano_edicion <- factor(enfr_total$ano_edicion,
+                                 levels = c("2009", "2013", "2018"))
 
 ```
 
@@ -184,8 +194,10 @@ enfr_total <- enfr_total %>%
 ```{r}
 # Consumo de frutas y verduras
 enfr_total <- enfr_total %>% 
-  filter(!is.na(promedio_fyv_dia)) %>% 
-  mutate(cumple_nocumple = ifelse(promedio_fyv_dia >= 3, "Cumple", "No_cumple"))
+  filter(promedio_fyv_dia != "<NA>") %>%
+  mutate(cumple_no_cumple_fy_v = factor(ifelse(promedio_fyv_dia >= 3, "1", "0"),
+                                        levels = c("0", "1")))
+
 ```
 
 
@@ -246,9 +258,10 @@ enfr_total <-enfr_total %>%
 
 # Índice NBI dicotómico
 enfr_total <- enfr_total %>% 
-  mutate(sum_tipos = tipo_vivienda + tipo_suelo + tipo_cocina + 
-           tipo_baño + tipo_agua + tipo_hacinamiento,
-         indice_nbi_hogar_dic = as.numeric(sum_tipos >= 1))
+  mutate(sum_tipos = tipo_vivienda + tipo_suelo + tipo_cocina + tipo_baño + tipo_agua + tipo_hacinamiento,
+         indice_nbi_hogar_dic = as.numeric(sum_tipos >= 1),
+         indice_nbi_hogar_dic = factor(as.character(indice_nbi_hogar_dic),
+         levels = c("0", "1")))
 
 ```
 
@@ -256,7 +269,8 @@ enfr_total <- enfr_total %>%
 
 ```{r message=FALSE, warning=FALSE}
 ENFR_limpia <- enfr_total %>% 
-  select(ano_edicion, provincia, cumple_nocumple, genero, edad, rango_edad, nivel_de_instruccion, quintil_ingresos, indice_nbi_hogar_dic, promedio_fyv_dia, region)
+  select(ano_edicion, provincia, cumple_no_cumple_fy_v, genero, edad, rango_edad, nivel_de_instruccion, quintil_ingresos, indice_nbi_hogar_dic, promedio_fyv_dia, region)
+
 
 ```
 

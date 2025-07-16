@@ -45,8 +45,8 @@ library(janitor)
 # Carga de datos procesados
 
 ```{r message=FALSE, warning=FALSE}
-ENFR_limpia <- read_csv("C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/3. Datos procesados/ENFR_limpia.csv")
-CNA_CN_limpia <- read_csv("C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/3. Datos procesados/CNA_CN_limpia.csv")
+ENFR_limpia <- readRDS("C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/2. Procesamiento/ENFR_limpia.rds")
+CNA_CN_limpia <- readRDS("C:/Anlisis-consumo-frutihorticola-Arg/Procesamiento y preparacion de datos/2. Procesamiento/CNA_CN_limpia.rds")
 
 ```
 
