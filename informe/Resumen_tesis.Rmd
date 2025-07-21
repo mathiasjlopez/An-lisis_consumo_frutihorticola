@@ -39,13 +39,13 @@ Analizar los patrones de consumo de frutas y verduras en la población adulta ar
 
 ### Herramienta de trabajo
 
-Los análisis fueron realizados con el software R, y los principales paquetes utilizados fueron: *ggplot2* y *dplyr* de *tidyverse*, *Dharma* y *glmTMB*.
+Los análisis fueron realizados con el software R, y los principales paquetes utilizados fueron: *ggplot2* y *dplyr* de *tidyverse*, *Dharma*, *emmeans* y *glmTMB*.
 
 ### Bases de datos
 
--   Encuesta Nacional de Factores de Riesgo (ENFR, ediciones: 2009, 2013 y 2018).
--   Censo Nacional Agropecuario (CNA, ediciones: 2008 y 2018)
--   Censo Nacional (CN, edición: 2010)
+-   Encuesta Nacional de Factores de Riesgo (ENFR - ediciones: 2009, 2013 y 2018).
+-   Censo Nacional Agropecuario (CNA - ediciones: 2008 y 2018)
+-   Censo Nacional (CN - edición: 2010)
 
 [*Fuente: INDEC*](https://www.indec.gob.ar/indec/web/Institucional-Indec-BasesDeDatos-2)
 
@@ -72,23 +72,27 @@ En el procesamiento y preparación de los datos para el análisis se realizaron:
 
 -   Exploración y manejo de los NA.
 
--   Integración de las diferentes fuentes y procesamiento de grandes volúmenes de datos (data integration, big data processing),incluyendo tareas de: limpieza, recodificación de las variables.
+-   Integración de las diferentes fuentes y procesamiento de grandes volúmenes de datos (data integration, big data processing),incluyendo tareas de: limpieza y recodificación de las variables.
 
 ### Análisis descriptivo y exploratorio
 
-En la descripción de la muestra se realizaron análisis descriptivos y exploratorios de los datos: frecuencia absoluta y porcentaje para cada categorías de las variables cualitativas y media y desvío estándar para las variables cuantitativas. Más detalladamente, se analizaron tendencias generales, relaciones entre las variables (Correlación y Colinealidad) y potenciales interacciones, mediante gráficos de perfiles, entre variables predictoras para evaluar posibles interacciones.
+Se realizaron análisis descriptivos y exploratorios de los datos de la muestra: frecuencia absoluta y porcentaje para cada categorías de las variables cualitativas y media y desvío estándar para las variables cuantitativas. 
+
+Más detalladamente, se analizaron tendencias generales, relaciones entre las variables (Correlación y Colinealidad) y potenciales interacciones (mediante gráficos de perfiles) entre variables predictoras para evaluar posibles interacciones.
 
 ### Modelando la variable respuesta
 
-Para analizar el cumplimiento del CFyV se ajustaron *modelos lineales generalizados mixtos* con *distribución Bernoulli* y función de enlace *logit*.
+Para analizar el cumplimiento del CFyV se ajustaron *modelos lineales generalizados mixtos* (GLMM) con *distribución Bernoulli* y función de enlace *logit*.
 
-> [!NOTE] Los Modelos Lineales Generalizados Mixtos (MLGM) son una herramienta estadística poderosa que combina las ventajas de los modelos lineales generalizados (GLM) y los modelos lineales mixtos (MLM). Permiten analizar datos donde la variable de respuesta no sigue necesariamente una distribución normal, y donde existen correlaciones o estructuras complejas entre las observaciones.
+> [!NOTA] Los Modelos Lineales Generalizados Mixtos (MLGM) son una herramienta estadística poderosa que combina las ventajas de los modelos lineales generalizados (GLM) y los modelos lineales mixtos (MLM). Permiten analizar datos donde la variable de respuesta no sigue necesariamente una distribución normal, y donde existen correlaciones o estructuras complejas entre las observaciones.
 
-La estrategia de modelado implicó una metodología de pasos sucesivos, en donde inicialmente se construyeron *modelos simples* para luego dar lugar a *modelos complejos*. Estos últimos estaban integrados por diferentes interacciones entre sus variables predictoras las cuales permiten estudiar los objetivos del trabajo de investigación. Para poder abordar los tópicos propuestos, se dividieron a los modelos en dos secciones: en la **sección A** se estudiaron los modelos que responden a los **Determinantes socioeconómicos** del cumplimiento en el CFyV y en la **sección B** se estudiaron aquellos que responden **Determinantes socioeconómicos y ambientales**. Se trabajó con un nivel de significación del 0.01.
+La estrategia de modelado implicó una metodología de pasos sucesivos, en donde inicialmente se construyeron *modelos simples* para luego dar lugar a *modelos complejos*. Estos últimos estaban integrados por diferentes interacciones entre sus variables predictoras las cuales permitieron estudiar los objetivos del trabajo de investigación. 
+
+Para poder abordar los tópicos propuestos, se dividieron a los modelos en dos secciones: en la **sección A** se estudiaron los modelos que responden a los **Determinantes socioeconómicos** del cumplimiento en el CFyV y en la **sección B** se estudiaron aquellos que responden **Determinantes socioeconómicos y ambientales**. Se trabajó con un nivel de significación del 0.01.
 
 El criterio utilizado para seleccionar y analizar el *modelos complejos* a estudiar en cada sección fue el *Criterio de Información de Akaike* (AIC). Por su parte, la magnitud del efecto se estimó mediante el cálculo de los Odds Ratio Ajustados, con sus respectivos intervalos de confianza (IC 95%).
 
-> [!NOTE] Los Odds Ratio Ajustados son una medida de asociación que estiman la fuerza de la relación entre una exposición (ej: fumar) y un resultado (ej: enfermedad pulmonar), teniendo en cuenta (ajustando por) otras variables que podrían influir en esa relación (ej: edad del individuo).
+> [!NOTA] Los Odds Ratio Ajustados son una medida de asociación que estiman la fuerza de la relación entre una exposición (ej: fumar) y un resultado (ej: enfermedad pulmonar), teniendo en cuenta (ajustando por) otras variables que podrían influir en esa relación (ej: edad del individuo).
 
 ## Resultados principales
 
@@ -130,7 +134,7 @@ library(gt)
 
 
 
-*Tabla 1. Modelos múltiples alternativos evaluados y sus AIC correspondientes. Todas las variables incluidas de manera aditiva (rango de edad, carencias de la vivienda, nivel de instrucción) resultaron significativas (p < 0,01).* 
+*Tabla 1. Modelos múltiples alternativos evaluados y sus AIC correspondientes. Todas las variables incluidas de manera aditiva (rango de edad, carencias de la vivienda, nivel de instrucción) que no figuran en la tabla resultaron significativas (p < 0,01).* 
 ```{r message=FALSE, warning=FALSE, echo=FALSE, out.width="70%"}
 library(gt)
 library(dplyr)
@@ -331,6 +335,42 @@ knitr::include_graphics("C:/Tesis/Figuras/Media de probabillidad estimada del CF
 <br>
 
 ### Determinantes socioeconomicos y ambientales
+
+*Tabla 2. Modelos múltiples alternativos evaluados y sus AIC correspondientes. Todas las variables incluidas de manera aditiva (rango de edad, carencias de la vivienda, nivel de instrucción) que no figuran en la tabla resultaron significativas (p < 0,01).* 
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+library(gt)
+library(dplyr)
+
+tabla <- tribble(
+  ~Modelo, ~Variables, ~`P valor`, ~AIC,
+  "Modelo Nulo", "-", "-", "94.969",
+  "Modelo 1", "Quintil de ingreso * Año de edición /\nGénero * Quintil de ingreso", "< 0,01 /\n< 0,01", "59.540",
+  "Modelo 2", "Quintil de ingreso * Año de edición /\nGénero * Quintil de ingreso /\n EAP frutihorticola", "< 0,01 /\n< 0,01 /\n< 0,01", "59.529",
+  "Modelo 3", "Quintil de ingreso * Año de edición /\nGénero * Quintil de ingreso /\n EAP frutihorticola * Año de edición", "0,01 /\n< 0,01 /\n< 0,01", "59.478"
+)
+
+tabla %>%
+  gt() %>%
+  tab_header(title = md("**Modelos ajustados**")) %>%
+  cols_label(
+    Modelo = "Modelo alternativo",
+    Variables = "Variables e interacciones de interes",
+    `P valor` = "Sig de las interacciones (p valor)",
+    AIC = "AIC"
+  ) %>%
+  tab_style(
+    style = cell_text(weight = "bold", align = "center"),
+    locations = list(
+      cells_column_labels(everything()),
+      cells_body(columns = Modelo)
+    )
+  ) %>%
+  tab_style(
+    style = cell_text(align = "center"),
+    locations = cells_body()
+  )
+```
+
 
 #### Modelo seleccionado:
 
