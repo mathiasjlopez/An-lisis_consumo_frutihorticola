@@ -10,6 +10,7 @@ Estudiar como el cumplimiento del consumo mínimo recomendado por la OMS (400g d
 - Nivel socioeconómico a nivel individual, hogar y provincial
 - Género
 - Edad
+- Nivel máximo de instrucción alcanzado.
 - Condiciones extructurales de la vivienda
 - Superficie frutihorticola cultivada en cada provincia
 
@@ -46,9 +47,13 @@ Todo el flujo está documentado en:
 Los datos procesados se guardaron en `/datos_procesados/` para ser usados directamente en modelos o visualizaciones.
 
 ---
+## Seleccion de modelos
+
+El criterio utilizado para seleccionar y analizar el o los *modelos* a estudiar en cada sección fue el *Criterio de Información de Akaike* (**AIC**). Por su parte, la magnitud del efecto se estimó mediante el cálculo de los *Odds Ratio Ajustados*, con sus respectivos intervalos de confianza (**IC 95%**).
 
 ## Análisis y resultados 📊
 
+- La muestra final estuvo integrada por n = 94.463 encuestados/as mayores de 18 años de centros urbanos de más de 5.000 habitantes del territorio Argentino.
 - Se modeló el cumplimiento con GLMMs de distribución binomial.
 - Se identificaron desigualdades sociales: las personas de mayor ingreso, mayor nivel educativo y sin carencias estructurales de la vivienda tienen más probabilidades de cumplir con la recomendación.
 - Las desigualdades, entre las personas de mayor y menor ingreso, crecieron entre 2009 y 2018.
